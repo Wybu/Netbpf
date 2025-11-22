@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 # CẤU HÌNH ĐƯỜNG DẪN
-RAW_LOG_PATH = "../data/traffic_log.csv" # Đường dẫn tới file log từ XDP
+RAW_LOG_PATH = "xdp_project/data/traffic_log.csv"
 OUTPUT_TRAIN = "train_data.csv"
 OUTPUT_TEST = "test_data.csv"
 

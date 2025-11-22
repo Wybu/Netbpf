@@ -9,9 +9,9 @@ from bcc import BPF
 
 # ================= CONFIGURATION =================
 # THAY ĐỔI INTERFACE Ở ĐÂY NẾU CẦN
-INTERFACE = "eth0"  
-OUTPUT_FILE = "data/traffic_log.csv"
-SRC_FILE = "src/monitor.c"
+INTERFACE = "ens33"  
+OUTPUT_FILE = "xdp_project/data/traffic_log.csv"
+SRC_FILE = "xdp_project/src/monitor.c"
 
 # ================= HELPER FUNCTIONS =================
 def ip_to_str(ip_int):

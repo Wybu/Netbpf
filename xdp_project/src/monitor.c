@@ -1,4 +1,11 @@
 // src/monitor.c
+#ifndef BPF_WQ_FIX
+#define BPF_WQ_FIX
+struct bpf_wq {
+	unsigned long raw;
+};
+#endif
+
 #include <uapi/linux/bpf.h>
 #include <linux/in.h>
 #include <linux/if_ether.h>

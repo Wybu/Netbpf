@@ -2,78 +2,80 @@ import csv
 import time
 import random
 
-# DUONG DAN FILE
-OUTPUT_FILE = "/home/quyna/Downloads/DATN_Quy/xdp_project/data/traffic_log.csv"
-
+OUTPUT_FILE = "/home/quyna/Desktop/DATN_Quy/xdp_project/data/traffic_log.csv"
 START_TIME_NS = int(time.time() * 1e9)
-DURATION_PER_PHASE = 50 # 50 giay cho moi loai
+DURATION_PER_PHASE = 40 # 40 giay moi pha
 
 def generate_row(timestamp, mode="NORMAL"):
     src_ip = f"{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}"
     dst_ip = "192.168.5.134"
     src_port = random.randint(1024, 65535)
     
-    if mode == "NORMAL":
-        dst_port = random.choice([80, 443, 53, 22])
-        protocol = 6
-        flags = random.choice([16, 24, 18]) # ACK, PSH-ACK...
-        flag_desc = "ACK"
-        length = random.randint(64, 1500)
-        label = "NORMAL"
-        
-    elif mode == "HEAVY_NORMAL": # Nguoi dung xem Youtube 4K (Normal nhung PPS cao)
+    # --- KICH BAN LAM LU LAN AI ---
+    
+    if mode == "NORMAL_BROWSING": 
+        # Luot web binh thuong: PPS thap, ACK/PSH
         dst_port = 443
         protocol = 6
         flags = 16 # ACK
         flag_desc = "ACK"
-        length = 1400 # Goi tin to
+        length = random.randint(100, 1000)
         label = "NORMAL"
 
-    elif mode == "LOW_ATTACK": # Tan cong cham (Attack nhung PPS thap)
-        dst_port = 80
+    elif mode == "FLASH_CROWD": 
+        # [QUAN TRONG] Nguoi dung vao web dong loat (Ssale, Dang ky tin chi)
+        # Hien tuong: PPS tang cao, nhieu SYN (moi ket noi)
+        # AI se rat de nham cai nay la SYN Flood
+        dst_port = 443
         protocol = 6
-        flags = 2 # SYN
+        flags = 2 # SYN (Giong het tan cong!)
         flag_desc = "SYN"
         length = 64
-        label = "ATTACK"
-        
+        label = "NORMAL" # Ban chat van la Normal
+
+    elif mode == "STEALTH_ACK_ATTACK": 
+        # [QUAN TRONG] Tan cong ACK Flood
+        # Hien tuong: PPS cao vua phai, dung ACK
+        # AI se rat de nham cai nay la Normal (tai file)
+        dst_port = 80
+        protocol = 6
+        flags = 16 # ACK (Giong het Normal!)
+        flag_desc = "ACK"
+        length = random.randint(64, 1400) # Gia lap kich thuoc ngau nhien
+        label = "ATTACK" # Ban chat la Attack
+
     return [timestamp, src_ip, dst_ip, src_port, dst_port, protocol, length, flags, flag_desc, label]
 
-print(f"🚀 Dang tao du lieu 'Hard Mode' tai: {OUTPUT_FILE}")
+print(f"🚀 Dang tao du lieu 'NIGHTMARE MODE' (Gay nhieu AI)...")
 
 with open(OUTPUT_FILE, "w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(['timestamp_ns', 'src_ip', 'dst_ip', 'src_port', 'dst_port', 
                      'protocol', 'length', 'tcp_flags_raw', 'tcp_flags_desc', 'label'])
-
     current_time = START_TIME_NS
 
-    # 1. NORMAL THUONG (PPS: 10-50)
-    print("... Phase 1: Normal (Low traffic)...")
+    # 1. NORMAL THUONG (De doan)
+    print("Phase 1: Normal Browsing...")
     for _ in range(DURATION_PER_PHASE):
-        for _ in range(random.randint(10, 50)):
-            writer.writerow(generate_row(current_time, "NORMAL"))
+        for _ in range(random.randint(20, 50)):
+            writer.writerow(generate_row(current_time, "NORMAL_BROWSING"))
         current_time += 1_000_000_000
 
-    # 2. HEAVY NORMAL (PPS: 300-500) -> Gay nhieu cho Model
-    print("... Phase 2: Heavy Normal (High traffic - Video Streaming)...")
+    # 2. FLASH CROWD (Normal nhung giong Attack)
+    # Day PPS len 300, nhieu SYN -> Model tuong SYN Flood
+    print("Phase 2: Flash Crowd (Gia lap nguoi dung dong)...")
+    for _ in range(DURATION_PER_PHASE):
+        for _ in range(random.randint(200, 300)):
+            writer.writerow(generate_row(current_time, "FLASH_CROWD"))
+        current_time += 1_000_000_000
+
+    # 3. STEALTH ACK ATTACK (Attack nhung giong Normal)
+    # Dung ACK, PPS khoang 400 -> Model tuong dang tai phim
+    print("Phase 3: Stealth ACK Attack...")
     for _ in range(DURATION_PER_PHASE):
         for _ in range(random.randint(300, 500)):
-            writer.writerow(generate_row(current_time, "HEAVY_NORMAL"))
+            writer.writerow(generate_row(current_time, "STEALTH_ACK_ATTACK"))
         current_time += 1_000_000_000
 
-    # 3. LOW RATE ATTACK (PPS: 200-400) -> Lan lon voi Heavy Normal
-    print("... Phase 3: Low Rate Attack (Stealthy DDoS)...")
-    for _ in range(DURATION_PER_PHASE):
-        for _ in range(random.randint(200, 400)):
-            writer.writerow(generate_row(current_time, "LOW_ATTACK"))
-        current_time += 1_000_000_000
-    
-    # 4. FLOOD ATTACK (PPS: 2000) -> De phat hien
-    print("... Phase 4: Standard Flood Attack...")
-    for _ in range(DURATION_PER_PHASE):
-        for _ in range(random.randint(2000, 2500)):
-            writer.writerow(generate_row(current_time, "LOW_ATTACK")) # Reuse ham nhung tang so luong vong lap
-        current_time += 1_000_000_000
-
-print("✅ Xong! Du lieu nay se lam Accuracy giam xuong.")
+print("✅ Xong! Du lieu nay cuc kho phan biet.")
+print("👉 Chay dataprep.py va model.py ngay de xem Accuracy tut doc!")

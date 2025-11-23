@@ -26,9 +26,7 @@ def generate_row(timestamp, mode="NORMAL"):
         label = "NORMAL"
 
     elif mode == "MIMICRY_ATTACK": 
-        # Hacker gia mao y het nguoi dung
-        # PPS: 500 - 1000 (Giong het!)
-        # Flags: ACK (Giong het!)
+       
         dst_port = 443
         protocol = 6
         flags = 16 # ACK
@@ -62,5 +60,5 @@ with open(OUTPUT_FILE, "w", newline="") as f:
             writer.writerow(generate_row(current_time, "MIMICRY_ATTACK"))
         current_time += 1_000_000_000
 
-print("✅ Xong! Du lieu nay AI se phai doan mo.")
-print("👉 Chay dataprep.py va model.py di, dam bao Accuracy se tut!")
+
+print(" Chay dataprep.py va model.py di, dam bao Accuracy se tut!")

@@ -3,7 +3,7 @@ import time
 import random
 
 # DUONG DAN FILE (Nho chinh lai neu can)
-OUTPUT_FILE = "/home/quyna/Downloads/DATN_Quy/xdp_project/data/traffic_log.csv"
+OUTPUT_FILE = "/home/quyna/Desktop/DATN_Quy/xdp_project/data/traffic_log.csv"
 START_TIME_NS = int(time.time() * 1e9)
 DURATION_PER_PHASE = 60 # 60 giay moi pha
 

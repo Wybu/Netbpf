@@ -3,7 +3,6 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import os
 
-# CAU HINH DUONG DAN (Dung duong dan tuyet doi)
 RAW_LOG_PATH = "/home/quyna/Desktop/DATN_Quy/xdp_project/data/traffic_log.csv"
 OUTPUT_TRAIN = "train_data.csv"
 OUTPUT_TEST = "test_data.csv"
@@ -11,24 +10,20 @@ OUTPUT_TEST = "test_data.csv"
 def load_and_process_data(filepath):
     print(f"Dang doc du lieu tu {filepath}...")
     
-    # 1. FIX LOI DtypeWarning (Cot 9 co mixed types)
-    # low_memory=False giup pandas doc file tot hon voi cac cot lon xon
     try:
         df = pd.read_csv(filepath, low_memory=False)
     except FileNotFoundError:
         print("Loi: Khong tim thay file log!")
         return None
 
-    # 2. CHUAN HOA TEN COT
-    # Xu ly truong hop file thieu header (neu cot dau tien la so)
+ 
     if str(df.columns[0]).isdigit():
-        print("⚠️ File thieu Header. Dang tu dong gan ten cot...")
         expected_cols = ['timestamp_ns', 'src_ip', 'dst_ip', 'src_port', 'dst_port', 
                          'protocol', 'length', 'tcp_flags_raw', 'tcp_flags_desc', 'label']
-        # Chi lay so luong cot tuong ung
+       
         df.columns = expected_cols[:len(df.columns)]
     else:
-        # Chuan hoa ten cot ve chu thuong, xoa khoang trang
+
         df.columns = df.columns.str.strip().str.lower()
         rename_map = {
             'ts': 'timestamp_ns', 'timestamp': 'timestamp_ns',
@@ -38,44 +33,30 @@ def load_and_process_data(filepath):
         }
         df.rename(columns=rename_map, inplace=True)
 
-    print(f"🔍 Cac cot tim thay: {df.columns.tolist()}")
+    print(f"Cac cot tim thay: {df.columns.tolist()}")
 
-    # 3. XU LY LABEL (Fix mixed types)
+
     if 'label' in df.columns:
-        # Chuyen het ve string roi moi so sanh de tranh loi
         df['label'] = df['label'].astype(str).str.strip().str.upper()
         df['label_is_attack'] = df['label'].apply(lambda x: 0 if x == 'NORMAL' else 1)
     else:
         df['label_is_attack'] = 0
-
-    # 4. XU LY THOI GIAN (Fix loi 13GB RAM)
     try:
-        # Ep kieu ve so (neu co dong nao la chu thi bien thanh NaN)
+
         df['timestamp_ns'] = pd.to_numeric(df['timestamp_ns'], errors='coerce')
         df = df.dropna(subset=['timestamp_ns']) # Xoa dong loi
         
         df['datetime'] = pd.to_datetime(df['timestamp_ns'], unit='ns')
     except:
         df['datetime'] = pd.to_datetime(df['timestamp_ns'], unit='s')
-    
-    # --- 🔥 DOAN CODE QUAN TRONG NHAT: LOC RAC NAM 1970 🔥 ---
-    # Chi lay du lieu tu nam 2024 tro di
-    current_year = pd.Timestamp.now().year
-    # Loc bo nhung dong co nam < (Nam hien tai - 1)
-    df = df[df['datetime'].dt.year >= (current_year - 1)]
-    
+
     if df.empty:
-        print("❌ Loi: Sau khi loc thoi gian, khong con du lieu nao hop le!")
         return None
-        
-    print(f"✅ Da loc bo du lieu rac. So luong dong sach: {len(df)}")
-    # -----------------------------------------------------------
 
     df = df.set_index('datetime')
 
-    print("Dang trich xuat dac trung (Resampling)...")
-    
-    # 5. GOM NHOM (RESAMPLE)
+    print("Dang trich xuat dac trung (Resampling)...") 
+    # GOM NHOM 
     agg_rules = {}
     if 'length' in df.columns: agg_rules['length'] = ['count', 'sum', 'mean']
     if 'tcp_flags_raw' in df.columns: agg_rules['tcp_flags_raw'] = lambda x: (x == 2).sum()
@@ -83,7 +64,6 @@ def load_and_process_data(filepath):
     if 'label_is_attack' in df.columns: agg_rules['label_is_attack'] = 'max'
 
     if not agg_rules: 
-        print("❌ Khong tim thay cac cot can thiet de feature engineering")
         return None
 
     df_resampled = df.resample('1S').agg(agg_rules)
@@ -100,7 +80,8 @@ def load_and_process_data(filepath):
     # Loai bo giay khong co traffic
     if 'pps' in df_resampled.columns:
         df_resampled = df_resampled[df_resampled['pps'] > 0].copy()
-        
+
+  
         # Tinh SYN Rate
         if 'syn_count' in df_resampled.columns:
             df_resampled['syn_rate'] = df_resampled['syn_count'] / df_resampled['pps']
@@ -112,9 +93,7 @@ if __name__ == "__main__":
     df_features = load_and_process_data(RAW_LOG_PATH)
     
     if df_features is not None:
-        print(f"📊 So luong mau (giay) sau khi xu ly: {len(df_features)}")
-        
-        # Auto-label neu chua co label
+        print(f" So luong mau (giay) sau khi xu ly: {len(df_features)}")
         if 'label' not in df_features.columns:
             conditions = [
                 (df_features['pps'] > 1000) | 
@@ -124,8 +103,6 @@ if __name__ == "__main__":
 
         print(f"   + Normal (0): {len(df_features[df_features['label']==0])}")
         print(f"   + Attack (1): {len(df_features[df_features['label']==1])}")
-
-        # Chia train/test
         X = df_features.drop('label', axis=1)
         y = df_features['label']
         X = X.fillna(0)
@@ -138,4 +115,4 @@ if __name__ == "__main__":
         train_set.to_csv(OUTPUT_TRAIN, index=False)
         test_set.to_csv(OUTPUT_TEST, index=False)
         
-        print(f"✅ XONG! Da tao file {OUTPUT_TRAIN} va {OUTPUT_TEST}")
+        print(f" Da tao file {OUTPUT_TRAIN} va {OUTPUT_TEST}")

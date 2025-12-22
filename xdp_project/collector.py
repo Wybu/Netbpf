@@ -9,19 +9,16 @@ from bcc import BPF
 
 # config
 INTERFACE = "ens33"  
-OUTPUT_FILE = "data/traffic_log.csv"
+OUTPUT_FILE = "/home/quyna/Desktop/DATN_Quy/xdp_project/data/traffic_log.csv"
 SRC_FILE = "src/monitor.c"
 
-# ham
 def ip_to_str(ip_int):
-    """Chuyển IP số nguyên sang string (VD: 192.168.1.1)"""
     try:
         return socket.inet_ntoa(struct.pack("I", ip_int))
     except:
         return "0.0.0.0"
 
 def get_tcp_flags_str(flags):
-    """Giải mã cờ TCP để dễ đọc (cho debug)"""
     res = []
     if flags & 0x02: res.append("SYN")
     if flags & 0x10: res.append("ACK")
@@ -48,12 +45,9 @@ try:
     b.attach_xdp(INTERFACE, fn, 0)
 except Exception:
     try:
-    
-        print(f"[!] Native mode failed. Retrying with SKB/Generic mode (WSL compatible)...")
         b.attach_xdp(INTERFACE, fn, flags=BPF.XDP_FLAGS_SKB_MODE)
         mode = "SKB/GENERIC"
     except Exception as e:
-        print(f"[!] Critical Error: Cannot attach XDP to {INTERFACE}. Check interface name or permissions.")
         print(f"Error detail: {e}")
         sys.exit(1)
 
@@ -63,7 +57,7 @@ print(f"[+] Successfully attached in {mode} mode.")
 header = ["timestamp_ns", "src_ip", "dst_ip", "src_port", "dst_port", "protocol", "length", "tcp_flags_raw", "tcp_flags_desc"]
 file_exists = os.path.isfile(OUTPUT_FILE)
 
-# mo log file
+# log file
 try:
     os.makedirs("data", exist_ok=True)
     f = open(OUTPUT_FILE, "a", newline="")

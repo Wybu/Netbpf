@@ -5,7 +5,6 @@ import os
 import sys
 from collections import Counter
 
-# --- CAU HINH ---
 LOG_FILE = "/home/quyna/Desktop/DATN_Quy/xdp_project/data/traffic_log.csv"
 MODEL_FILE = "rf_model.pkl"
 
@@ -49,9 +48,7 @@ def extract_features(window_packets):
     return df
 
 def analyze_attacker(window_packets):
-    """
-    Khi AI bao tan cong, ham nay se quet lai log de tim IP thu pham.
-    """
+    """  forensic don gian de tim ip tan cong """
     src_ips = []
     syn_ips = []
     
@@ -68,14 +65,12 @@ def analyze_attacker(window_packets):
     
     if not src_ips: return "Khong xac dinh"
 
-    # 1. Tim IP gui nhieu goi nhat (Top Talker)
     top_ip, count = Counter(src_ips).most_common(1)[0]
-    
-    # 2. Tim IP gui nhieu SYN nhat (Neu co)
+
     reason = "Flood Volume"
     if syn_ips:
         top_syn_ip, syn_c = Counter(syn_ips).most_common(1)[0]
-        if syn_c > count * 0.5: # Neu SYN chiem qua ban
+        if syn_c > count * 0.5:
             top_ip = top_syn_ip
             reason = "SYN Flood"
             
@@ -108,17 +103,17 @@ def main():
                 if current_window:
                     feats = extract_features(current_window)
                     if feats is not None:
-                        # DU DOAN
+                        # predict
                         pred = model.predict(feats)[0]
                         
                         pps = feats['pps'][0]
                         syn_rate = feats['syn_rate'][0]
                         
                         if pred == 1:
-                            # --- NEU LA TAN CONG -> GOI CONAN DIEU TRA NGAY ---
+                            # tan cong
                             culprit = analyze_attacker(current_window)
                             status = "!!! TAN CONG !!!"
-                            # In mau do
+                            # color red
                             print(f"\033[91m{last_second} | {pps:<5} | {syn_rate:.2f} | {status:<15} | {culprit}\033[0m")
                         else:
                             # In binh thuong

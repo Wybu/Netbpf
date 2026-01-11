@@ -13,9 +13,6 @@ struct bpf_wq {
 #include <linux/tcp.h>
 #include <linux/udp.h>
 
-/* * DEFINITION: Cấu trúc dữ liệu gửi lên User Space (Feature Vector)
- * Cấu trúc này phải khớp (aligned) với cấu trúc bên Python
- */
 struct packet_data_t {
     u32 src_ip;
     u32 dst_ip;
@@ -79,12 +76,8 @@ int xdp_prog(struct xdp_md *ctx) {
             pkt.tcp_flags = 0; // UDP không có cờ
         }
     }
-    // (Optional) Có thể mở rộng ICMP tại đây
 
-    // 4. Submit dữ liệu lên User Space
     events.perf_submit(ctx, &pkt, sizeof(pkt));
 
-    // XDP_PASS: Cho phép gói tin đi qua (Monitoring Mode)
-    // XDP_DROP: Nếu muốn chặn
     return XDP_PASS;
 }

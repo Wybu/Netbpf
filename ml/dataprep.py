@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import os
 
-RAW_LOG_PATH = "/home/quyna/Desktop/DATN_Quy/xdp_project/data/traffic_log.csv"
+RAW_LOG_PATH = "path_to_raw_log_file"
 OUTPUT_TRAIN = "train_data.csv"
 OUTPUT_TEST = "test_data.csv"
 

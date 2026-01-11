@@ -8,8 +8,8 @@ import os
 from bcc import BPF
 
 # config
-INTERFACE = "ens33"  
-OUTPUT_FILE = "/home/quyna/Desktop/DATN_Quy/xdp_project/data/traffic_log.csv"
+INTERFACE = ""  
+OUTPUT_FILE = "path_to_output_file"
 SRC_FILE = "src/monitor.c"
 
 def ip_to_str(ip_int):

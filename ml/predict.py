@@ -5,7 +5,7 @@ import os
 import sys
 from collections import Counter
 
-LOG_FILE = "/home/quyna/Desktop/DATN_Quy/xdp_project/data/traffic_log.csv"
+LOG_FILE = "path_to_log_file"
 MODEL_FILE = "rf_model.pkl"
 
 FEATURE_COLS = ['pps', 'bps', 'avg_len', 'syn_count', 'unique_dst_ports', 'syn_rate']
